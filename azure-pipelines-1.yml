@@ -1,0 +1,34 @@
+name: javapipeline
+trigger: none
+pool: Helix_pool
+
+variables:
+  azureSubscription: 01ff8aab-9d5d-4173-94c7-d083c218881f
+  webAppName: webappanrg01
+  environmentName: testenv
+
+stages:
+- stage: builddatage
+  displayName: build stage
+  jobs:
+  - job: mavenPackageAndPublishArtifacts
+    displayName: Maven Package And Publish Artifacts
+    steps:
+    - task: Maven@4
+      inputs:
+        azureSubscription: 'javaappsvc'
+        mavenPomFile: 'pom.xml'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        javaHomeOption: 'JDKVersion'
+        mavenVersionOption: 'Default'
+        mavenAuthenticateFeed: false
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false
+    - task: CopyFiles@2
+      displayName: Copy files to Staging Artifact Directory
+      inputs:
+        SourceFolder: 'System.DefaulWorkinDirectory'
+        Contents: '**'
+        TargetFolder: 'Build.ArticatStagingDirectory'
+
