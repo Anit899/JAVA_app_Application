@@ -5,7 +5,7 @@ pool:
 
 variables:
   azureSubscription: 01ff8aab-9d5d-4173-94c7-d083c218881f
-  webAppName: webappanrg01
+  webAppName: linuxwebapp01
   environmentName: testenv
 
 stages:
@@ -50,7 +50,7 @@ stages:
          steps:
          - task: AzureWebApp@1
            inputs:
-             azureSubscription: 'javaappsvc'
+             azureSubscription: 'Pay-As-You-Go(818db7f4-d80e-42f3-ae3e-b98232ed02c0)'
              appType: 'webAppLinux'
-             appName: 'webappanrg01'
+             appName: 'linuxwebapp01'
              package: '$(System.DefaultWorkingDirectory)/**/*.zip'
