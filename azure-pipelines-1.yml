@@ -1,6 +1,7 @@
 name: javapipeline
 trigger: none
-pool: new_pipeline_pool
+pool: 
+  vmImage: 'ubuntu-latest'
 
 variables:
   azureSubscription: 01ff8aab-9d5d-4173-94c7-d083c218881f
