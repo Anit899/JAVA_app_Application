@@ -30,7 +30,7 @@ stages:
     - task: CopyFiles@2
       displayName: Copy files to Staging Artifact Directory
       inputs:
-        SourceFolder: 'System.DefaulWorkinDirectory'
-        Contents: '**'
-        TargetFolder: 'Build.ArticatStagingDirectory'
+        SourceFolder: '$(System.DefaultWorkingDirectory)/Java_app_by_MyWebApp'
+        Contents: 'target/*.jar'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
