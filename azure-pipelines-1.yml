@@ -48,9 +48,13 @@ stages:
      runOnce:
        deploy:
          steps:
+         - task:  DownloadPipelineArtifact@2
+           inputs:
+             buildType: 'current'
+             targetPath: '$(Pipeline.Workspace)'
          - task: AzureWebApp@1
            inputs:
              azureSubscription: 'Pay-As-You-Go(818db7f4-d80e-42f3-ae3e-b98232ed02c0)'
              appType: 'webAppLinux'
              appName: 'linuxwebapp01'
-             package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+             package: '$(Pipeline.Workspace)/**/*.jar'
