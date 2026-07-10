@@ -18,7 +18,8 @@ stages:
     - task: Maven@4
       inputs:
         azureSubscription: 'javaappsvc'
-        mavenPomFile: 'pom.xml'
+        mavenPomFile: 'Java_app_by_MyWebApp/pom.xml'
+        goals: 'package'
         publishJUnitResults: true
         testResultsFiles: '**/surefire-reports/TEST-*.xml'
         javaHomeOption: 'JDKVersion'
