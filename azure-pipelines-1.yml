@@ -33,4 +33,24 @@ stages:
         SourceFolder: '$(System.DefaultWorkingDirectory)/Java_app_by_MyWebApp'
         Contents: 'target/*.jar'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    - upload: '$(Build.ArtifactStagingDirectory)'
+      artifact: drop
 
+- stage: deploystage
+  displayName: deploy
+  dependsOn: builddatage
+  condition: succeeded()
+  jobs:
+  - deployment: DeoplyLinuxWebApp
+    displayName: Deploy linux Web App
+    environment: $(environmentName)
+    strategy:
+     runOnce:
+       deploy:
+         steps:
+         - task: AzureWebApp@1
+           inputs:
+             azureSubscription: 'javaappsvc'
+             appType: 'webAppLinux'
+             appName: 'webappanrg01'
+             package: '$(System.DefaultWorkingDirectory)/**/*.zip'
