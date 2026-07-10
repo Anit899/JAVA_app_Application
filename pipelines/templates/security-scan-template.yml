@@ -1,0 +1,42 @@
+parameters:
+  - name: workingDirectory
+    type: string
+
+steps:
+  # OWASP Dependency-Check — known vulnerable dependencies (CVEs) dhundta hai
+  - task: dependency-check-build-task@6
+    displayName: 'OWASP Dependency-Check Scan'
+    inputs:
+      projectName: 'JavaWebApp'
+      scanPath: '${{ parameters.workingDirectory }}'
+      format: 'HTML,XML'
+      failOnCVSS: '7'          # High/Critical CVEs pe pipeline fail ho jayega
+      enableExperimental: false
+
+  - task: PublishTestResults@2
+    displayName: 'Publish OWASP Report'
+    condition: always()
+    inputs:
+      testResultsFormat: 'XML'
+      testResultsFiles: '**/dependency-check-junit.xml'
+
+  # Secret scanning — hardcoded passwords/keys code mein na ho
+  - script: |
+      pip install detect-secrets --break-system-packages
+      detect-secrets scan ${{ parameters.workingDirectory }} > secrets-report.json
+    displayName: 'Secret Scanning'
+
+  # SAST — static code analysis (SonarQube alternative: CodeQL bhi use kar sakte ho)
+  - task: SonarQubePrepare@5
+    displayName: 'Prepare SonarQube Analysis'
+    inputs:
+      SonarQube: 'SonarQubeServiceConnection'
+      scannerMode: 'Other'
+
+  - task: SonarQubeAnalyze@5
+    displayName: 'Run SonarQube Analysis'
+
+  - task: SonarQubePublish@5
+    displayName: 'Publish Quality Gate Result'
+    inputs:
+      pollingTimeoutSec: '300'

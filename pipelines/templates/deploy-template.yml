@@ -1,0 +1,54 @@
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: appName
+    type: string
+  - name: environmentName
+    type: string
+  - name: deploySlot
+    type: string
+    default: 'staging'
+
+jobs:
+- deployment: DeployWebApp
+  displayName: 'Deploy to ${{ parameters.deploySlot }} slot'
+  environment: ${{ parameters.environmentName }}
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            buildType: 'current'
+            targetPath: '$(Pipeline.Workspace)'
+
+        # Deploy to STAGING slot pehle (production affect nahi hoga)
+        - task: AzureWebApp@1
+          displayName: 'Deploy to Staging Slot'
+          inputs:
+            azureSubscription: '${{ parameters.azureSubscription }}'
+            appType: 'webAppLinux'
+            appName: '${{ parameters.appName }}'
+            deployToSlotOrASE: true
+            resourceGroupName: '$(resourceGroupName)'
+            slotName: '${{ parameters.deploySlot }}'
+            package: '$(Pipeline.Workspace)/**/*.jar'
+
+        # Health check staging slot pe
+        - task: PowerShell@2
+          displayName: 'Health Check on Staging Slot'
+          inputs:
+            targetType: 'inline'
+            script: |
+              $response = Invoke-WebRequest -Uri "https://${{ parameters.appName }}-${{ parameters.deploySlot }}.azurewebsites.net/health" -UseBasicParsing
+              if ($response.StatusCode -ne 200) { throw "Health check failed!" }
+
+        # Slot swap = zero-downtime production release
+        - task: AzureAppServiceManage@0
+          displayName: 'Swap Staging to Production'
+          inputs:
+            azureSubscription: '${{ parameters.azureSubscription }}'
+            action: 'Swap Slots'
+            webAppName: '${{ parameters.appName }}'
+            resourceGroupName: '$(resourceGroupName)'
+            sourceSlot: '${{ parameters.deploySlot }}'

@@ -1,0 +1,25 @@
+parameters:
+  - name: pomFile
+    type: string
+
+steps:
+  - task: Maven@4
+    displayName: 'Maven Build'
+    inputs:
+      mavenPomFile: '${{ parameters.pomFile }}'
+      goals: 'package'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.25'
+      mavenVersionOption: 'Default'
+
+  - task: CopyFiles@2
+    displayName: 'Copy files to Staging'
+    inputs:
+      SourceFolder: '$(System.DefaultWorkingDirectory)/Java_app_by_MyWebApp'
+      Contents: 'target/*.jar'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - publish: '$(Build.ArtifactStagingDirectory)'
+    artifact: drop

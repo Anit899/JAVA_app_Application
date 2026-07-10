@@ -1,0 +1,57 @@
+name: javapipeline-devsecops
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: prod-secrets          # Azure Key Vault se linked variable group
+  - name: azureSubscription
+    value: 'javaappsvc'
+  - name: webAppName
+    value: 'linuxwebapp01'
+  - name: environmentName
+    value: 'testenv'
+  - name: resourceGroupName
+    value: 'webappanrg01'
+
+stages:
+# STAGE 1: Build
+- stage: BuildStage
+  displayName: 'Build & Package'
+  jobs:
+  - job: MavenBuild
+    displayName: 'Maven Package'
+    steps:
+    - template: templates/build-template.yml
+      parameters:
+        pomFile: 'Java_app_by_MyWebApp/pom.xml'
+
+# STAGE 2: Security Scan (DevSecOps core)
+- stage: SecurityScanStage
+  displayName: 'Security Scanning'
+  dependsOn: BuildStage
+  condition: succeeded()
+  jobs:
+  - job: SecurityScans
+    displayName: 'OWASP + SAST + Secrets'
+    steps:
+    - template: templates/security-scan-template.yml
+      parameters:
+        workingDirectory: 'Java_app_by_MyWebApp'
+
+# STAGE 3: Deploy (with approval gate + blue-green)
+- stage: DeployStage
+  displayName: 'Deploy to Production'
+  dependsOn: SecurityScanStage
+  condition: succeeded()
+  jobs:
+  - template: templates/deploy-template.yml
+    parameters:
+      azureSubscription: $(azureSubscription)
+      appName: $(webAppName)
+      environmentName: $(environmentName)
+      deploySlot: 'staging'

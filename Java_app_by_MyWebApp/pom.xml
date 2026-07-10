@@ -20,7 +20,7 @@
     <description>My first Java project - deployed as an Azure Web App</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>25</java.version>
     </properties>
 
     <dependencies>
